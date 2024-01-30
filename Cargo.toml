@@ -1,0 +1,14 @@
+# Copyright 2024 by Composable Foundation
+
+[package]
+name = "solana-write-account"
+authors = ["Michal Nazarewicz <mina86@mina86.com>"]
+version = "0.0.0"
+edition = "2021"
+
+[lib]
+name = "write_account"
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+solana-program = "1.18.26"
