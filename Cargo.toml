@@ -10,5 +10,8 @@ edition = "2021"
 name = "write_account"
 crate-type = ["cdylib", "lib"]
 
+[features]
+library = []
+
 [dependencies]
 solana-program = "1.18.26"
