@@ -1,5 +1,5 @@
 # Copyright 2024 by Composable Foundation
-# Copyright 2025 by Michał Nazarewicz
+# Copyright 2025 by Michał Nazarewicz <mina86@mina86.com>
 
 [package]
 name = "solana-write-account"
@@ -12,7 +12,8 @@ name = "write_account"
 crate-type = ["cdylib", "lib"]
 
 [features]
-library = []
+client = []
+lib = []
 
 [dependencies]
 solana-program = "1.18.26"
