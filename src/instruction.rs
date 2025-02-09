@@ -1,8 +1,28 @@
+use core::num::NonZeroU16;
+
 use solana_program::instruction::{AccountMeta, Instruction};
 use solana_program::program_error::ProgramError;
 use solana_program::pubkey::Pubkey;
 
 type Result<T = (), E = ProgramError> = core::result::Result<T, E>;
+
+/// Maximum chunk size sent to the write-account program.
+///
+/// The size utilises all of the space available in a single Solana transaction
+/// and is the default chunk size limit used by [`WriteIter`].  This is normally
+/// desired except if the Write instructions need to be executed with other
+/// instructions (such as those setting priority fees).
+///
+/// To adjust the size use the [`WriteIter::chunk_size`] method.
+// SAFETY: The value is non-zero.
+pub const MAX_CHUNK_SIZE: NonZeroU16 = unsafe { NonZeroU16::new_unchecked(988) };
+
+/// Maximum possible data length.
+///
+/// This corresponds directly to the maximum Solana account size which is 10
+/// MiB, see [`solana_program::system_instruction::MAX_PERMITTED_DATA_LENGTH`]
+const MAX_DATA_SIZE: u32 =
+    solana_program::system_instruction::MAX_PERMITTED_DATA_LENGTH as u32;
 
 /// Iterator generating Solana instructions calling the write-account program
 /// filling given account with given data.
@@ -14,23 +34,33 @@ pub struct WriteIter<'a> {
     bump: u8,
     data: Vec<u8>,
     position: usize,
-    pub chunk_size: core::num::NonZeroU16,
+    chunk_size: NonZeroU16,
 }
 
 impl<'a> WriteIter<'a> {
-    /// Constructs a new iterator generating Write instructions.
+    /// Constructs a new iterator generating Write instructions writing
+    /// length-prefixed data.
     ///
     /// `write_program` is the address of the write-account program used to fill
     /// account with the data.  `payer` is the account which signs and pays for
     /// the transaction and rent on the write account.  `seed` is seed used as
-    /// part of the PDA of the write account.  `data` is the data to write into
-    /// the account.
+    /// part of the PDA of the write account.
     ///
-    /// Note that if the write account already exists and is larger than data’s
-    /// length, the remaining bytes of the account will be untouched.  The
-    /// typical approach is to length-prefix the data.
+    /// A length-prefixed `data` is write into the account.  The length-prefix
+    /// uses 4-byte little-endian encoding for the length.  This is the same
+    /// format Borsh uses for array serialisation.  The length-prefixed data is
+    /// what [`crate::entrypoint`] macro expects.
     ///
-    /// Returns iterator which generates Write instructions calling
+    /// Returns an `ArithmeticOverflow` error if the resulting data exceeds
+    /// maximum Solana account size (which is 10 MiB).  If the write account
+    /// already exists and is larger than data’s length, the remaining bytes of
+    /// the account will be untouched.  The length-prefix allows extracting the
+    /// actual data length.
+    ///
+    /// Note that `seed` can be at most 31 bytes long which is one-less than
+    /// normally allowed for seeds.
+    ///
+    /// On success, returns iterator which generates Write instructions calling
     /// `write_program` and the address and bump of the write account where the
     /// data will be written to.
     ///
@@ -59,9 +89,43 @@ impl<'a> WriteIter<'a> {
         write_program: &'a Pubkey,
         payer: Pubkey,
         seed: &'a [u8],
+        mut data: Vec<u8>,
+    ) -> Result<(Self, Pubkey, u8)> {
+        let len = u32::try_from(data.len())
+            .ok()
+            .filter(|len| *len <= MAX_DATA_SIZE - 4)
+            .ok_or(ProgramError::ArithmeticOverflow)?;
+        check_seed(seed)?;
+        data.splice(0..0, len.to_le_bytes());
+        Self::new_impl(write_program, payer, seed, data)
+    }
+
+    /// Constructs a new iterator generating Write instructions writing raw
+    /// data.
+    ///
+    /// Just like [`WriteIter::new`] creates an iterator which generates Write
+    /// instructions calling the write-account program.  The difference is that
+    /// it does not length-prefix the `data`.
+    pub fn new_raw(
+        write_program: &'a Pubkey,
+        payer: Pubkey,
+        seed: &'a [u8],
         data: Vec<u8>,
     ) -> Result<(Self, Pubkey, u8)> {
+        u32::try_from(data.len())
+            .ok()
+            .filter(|len| *len <= MAX_DATA_SIZE)
+            .ok_or(ProgramError::ArithmeticOverflow)?;
         check_seed(seed)?;
+        Self::new_impl(write_program, payer, seed, data)
+    }
+
+    fn new_impl(
+        write_program: &'a Pubkey,
+        payer: Pubkey,
+        seed: &'a [u8],
+        data: Vec<u8>,
+    ) -> Result<(Self, Pubkey, u8)> {
         let (write_account, bump) = Pubkey::find_program_address(
             &[payer.as_ref(), seed],
             write_program,
@@ -74,11 +138,27 @@ impl<'a> WriteIter<'a> {
             bump,
             data,
             position: 0,
-            // TODO(mina86): Figure out the maximum size which would still fit
-            // in a transaction.
-            chunk_size: core::num::NonZeroU16::new(500).unwrap(),
+            chunk_size: MAX_CHUNK_SIZE,
         };
         Ok((iter, write_account, bump))
+    }
+
+    /// Sets maximum chunk size.
+    ///
+    /// By default the maximum chunk size is set to value which utilises full
+    /// space available in Solana transaction.  This is normally desired since
+    /// it reduces total number of transactions needed, but it doesn’t allow any
+    /// other instructions (such as setting priority fees or tipping) to be
+    /// executed together with the Write instructions.
+    ///
+    /// The `chunk_size` argument is clamped between 1 and [`MAX_CHUNK_SIZE`].
+    pub fn chunk_size(&mut self, chunk_size: usize) {
+        let size = match u16::try_from(chunk_size).map(NonZeroU16::new) {
+            Ok(Some(chunk_size)) => chunk_size.min(MAX_CHUNK_SIZE),
+            Ok(None) => NonZeroU16::MIN,
+            Err(_) => MAX_CHUNK_SIZE,
+        };
+        self.chunk_size = size;
     }
 
     /// Consumes the iterator and returns Write account address and bump.
@@ -138,7 +218,7 @@ pub fn free(
     seed: &[u8],
     bump: u8,
 ) -> Result<Instruction> {
-    let mut buf = [0; { solana_program::pubkey::MAX_SEED_LEN + 3 }];
+    let mut buf = [0; { solana_program::pubkey::MAX_SEED_LEN + 2 }];
     buf[1] = check_seed(seed)?;
     buf[2..seed.len() + 2].copy_from_slice(seed);
     buf[seed.len() + 2] = bump;
@@ -164,7 +244,7 @@ pub fn free(
 
 /// Checks that seed is below the maximum length; returns length cast to `u8`.
 fn check_seed(seed: &[u8]) -> Result<u8> {
-    if seed.len() <= solana_program::pubkey::MAX_SEED_LEN {
+    if seed.len() < solana_program::pubkey::MAX_SEED_LEN {
         Ok(seed.len() as u8)
     } else {
         Err(ProgramError::MaxSeedLengthExceeded)
