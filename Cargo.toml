@@ -8,7 +8,6 @@ version = "0.0.0"
 edition = "2021"
 
 [lib]
-name = "write_account"
 crate-type = ["cdylib", "lib"]
 
 [features]
