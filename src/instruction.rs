@@ -8,14 +8,16 @@ type Result<T = (), E = ProgramError> = core::result::Result<T, E>;
 
 /// Maximum chunk size sent to the write-account program.
 ///
-/// The size utilises all of the space available in a single Solana transaction
-/// and is the default chunk size limit used by [`WriteIter`].  This is normally
-/// desired except if the Write instructions need to be executed with other
-/// instructions (such as those setting priority fees).
+/// The size utilises all of the space available in a single Solana transaction.
+/// This is normally desired except if the Write instructions need to be
+/// executed with other instructions (such as those setting priority fees).
 ///
-/// To adjust the size use the [`WriteIter::chunk_size`] method.
+/// [`WriteIter`] uses this as the default chunk size with additional adjustment
+/// for the seed length.  To adjust the size use the [`WriteIter::chunk_size`]
+/// method.
 // SAFETY: The value is non-zero.
-pub const MAX_CHUNK_SIZE: NonZeroU16 = unsafe { NonZeroU16::new_unchecked(988) };
+pub const MAX_CHUNK_SIZE: NonZeroU16 =
+    unsafe { NonZeroU16::new_unchecked(988) };
 
 /// Maximum possible data length.
 ///
@@ -95,7 +97,6 @@ impl<'a> WriteIter<'a> {
             .ok()
             .filter(|len| *len <= MAX_DATA_SIZE - 4)
             .ok_or(ProgramError::ArithmeticOverflow)?;
-        check_seed(seed)?;
         data.splice(0..0, len.to_le_bytes());
         Self::new_impl(write_program, payer, seed, data)
     }
@@ -116,7 +117,6 @@ impl<'a> WriteIter<'a> {
             .ok()
             .filter(|len| *len <= MAX_DATA_SIZE)
             .ok_or(ProgramError::ArithmeticOverflow)?;
-        check_seed(seed)?;
         Self::new_impl(write_program, payer, seed, data)
     }
 
@@ -126,11 +126,12 @@ impl<'a> WriteIter<'a> {
         seed: &'a [u8],
         data: Vec<u8>,
     ) -> Result<(Self, Pubkey, u8)> {
+        check_seed(seed)?;
         let (write_account, bump) = Pubkey::find_program_address(
             &[payer.as_ref(), seed],
             write_program,
         );
-        let iter = Self {
+        let mut iter = Self {
             write_program,
             payer,
             write_account,
@@ -138,8 +139,9 @@ impl<'a> WriteIter<'a> {
             bump,
             data,
             position: 0,
-            chunk_size: MAX_CHUNK_SIZE,
+            chunk_size: NonZeroU16::MAX,
         };
+        iter.chunk_size(usize::MAX);
         Ok((iter, write_account, bump))
     }
 
@@ -151,14 +153,13 @@ impl<'a> WriteIter<'a> {
     /// other instructions (such as setting priority fees or tipping) to be
     /// executed together with the Write instructions.
     ///
-    /// The `chunk_size` argument is clamped between 1 and [`MAX_CHUNK_SIZE`].
+    /// The `chunk_size` argument is clamped between 1 and [`MAX_CHUNK_SIZE`] -
+    /// seed length.
     pub fn chunk_size(&mut self, chunk_size: usize) {
-        let size = match u16::try_from(chunk_size).map(NonZeroU16::new) {
-            Ok(Some(chunk_size)) => chunk_size.min(MAX_CHUNK_SIZE),
-            Ok(None) => NonZeroU16::MIN,
-            Err(_) => MAX_CHUNK_SIZE,
-        };
-        self.chunk_size = size;
+        let max = MAX_CHUNK_SIZE.get() - self.seed.len() as u16;
+        let chunk_size = chunk_size.min(usize::from(max)) as u16;
+        self.chunk_size = NonZeroU16::new(chunk_size)
+            .unwrap_or(NonZeroU16::MIN);
     }
 
     /// Consumes the iterator and returns Write account address and bump.
