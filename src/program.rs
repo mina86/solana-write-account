@@ -1,3 +1,7 @@
+// Solana has a weird way of customising the `entrypoint` macro.  Disable
+// warnings when `cfg` checks for an undefined feature.
+#![allow(unexpected_cfgs)]
+
 use solana_program::account_info::{next_account_info, AccountInfo};
 use solana_program::program_error::ProgramError;
 use solana_program::pubkey::Pubkey;
