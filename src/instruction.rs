@@ -15,9 +15,10 @@ type Result<T = (), E = ProgramError> = core::result::Result<T, E>;
 /// [`WriteIter`] uses this as the default chunk size with additional adjustment
 /// for the seed length.  To adjust the size use the [`WriteIter::chunk_size`]
 /// method.
-// SAFETY: The value is non-zero.
-pub const MAX_CHUNK_SIZE: NonZeroU16 =
-    unsafe { NonZeroU16::new_unchecked(988) };
+pub const MAX_CHUNK_SIZE: NonZeroU16 = match NonZeroU16::new(988) {
+    Some(value) => value,
+    None => unreachable!(),
+};
 
 /// Maximum possible data length.
 ///

@@ -18,7 +18,7 @@ use solana_program::pubkey::Pubkey;
 ///
 /// Must be called with pointer to properly serialised instruction such as done
 /// by the Solana runtime.  See [`solana_program::entrypoint::deserialize`].
-pub fn deserialize<'a>(
+pub unsafe fn deserialize<'a>(
     input: *mut u8,
 ) -> Result<(&'a Pubkey, Vec<AccountInfo<'a>>, &'a [u8]), ProgramError> {
     // SAFETY: Caller promises this is safe.
