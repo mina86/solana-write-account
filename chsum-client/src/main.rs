@@ -61,10 +61,10 @@ fn run() -> Result {
 /// program’s instruction data.
 fn parse_args() -> Result<Vec<u8>> {
     let mut args = std::env::args();
-    let mult = args.nth(1).ok_or(Error::Usage)?;
+    let mult = args.nth(1).ok_or(Error::usage())?;
     let mult = u8::from_str(mult.as_str())
-        .map_err(|_| Error::Usage)?;
-    let data = args.next().ok_or(Error::Usage)?;
+        .map_err(|_| Error::usage())?;
+    let data = args.next().ok_or(Error::usage())?;
     Ok([&[mult][..], data.as_bytes()].concat())
 }
 
@@ -100,7 +100,7 @@ fn call_chsum_chunked(
     // Send chunks
     eprintln!("Writing chunks into the data account…");
     let (chunks, account, bump) =
-        write_account::instruction::WriteIter::new(
+        solana_write_account::instruction::WriteIter::new(
             &WRITE_ACCOUNT_PROGRAM_ID,
             keypair.pubkey(),
             SEED,
@@ -123,7 +123,7 @@ fn call_chsum_chunked(
     // Free the account
     eprintln!();
     eprintln!("Freeing instruction data account…");
-    let instruction = write_account::instruction::free(
+    let instruction = solana_write_account::instruction::free(
         WRITE_ACCOUNT_PROGRAM_ID,
         keypair.pubkey(),
         Some(account),
@@ -197,11 +197,21 @@ fn send_and_confirm_instruction(
 
 #[derive(derive_more::From, derive_more::Display)]
 enum Error {
-    #[display("usage: chsum-cli <mult> [<data>]")]
-    #[from(ignore)]
-    Usage,
     Msg(&'static str),
-    Client(solana_client::client_error::ClientError),
     Prog(ProgramError),
     Box(Box<dyn std::error::Error>),
+}
+
+impl Error {
+    fn usage() -> Self {
+        Self::Msg("usage: chsum-cli <mult> [<data>]")
+    }
+}
+
+impl From<solana_client::client_error::ClientError> for Error {
+    fn from(
+        err: solana_client::client_error::ClientError,
+    ) -> Self {
+        Self::Box(Box::new(err))
+    }
 }
