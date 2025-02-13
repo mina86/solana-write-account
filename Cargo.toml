@@ -1,4 +1,5 @@
 # Copyright 2024 by Composable Foundation
+# Copyright 2025 by Michał Nazarewicz
 
 [package]
 name = "solana-write-account"
