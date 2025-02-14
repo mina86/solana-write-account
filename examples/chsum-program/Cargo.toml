@@ -1,0 +1,19 @@
+[package]
+name = "chsum-program"
+authors.workspace = true
+version.workspace = true
+edition.workspace = true
+
+[lib]
+name = "chsum"
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+solana-program.workspace = true
+solana-write-account = { workspace = true, features = ["lib"], optional = true }
+
+[features]
+default = ["use-write-account"]
+custom-heap = []
+custom-panic = []
+use-write-account = ["solana-write-account"]

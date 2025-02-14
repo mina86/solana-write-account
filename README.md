@@ -21,6 +21,6 @@ defines
 A more detailed description of the approach is available in [Solana
 transaction size
 limit](https://mina86.com/2025/solana-tx-size-limits/) article.
-Furthermore, this repository has a `demo` branch with example smart
+Furthermore, the `examples` directory contains an example smart
 contract and RPC client which take advantage of the *chunking*
 approach.

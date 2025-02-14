@@ -1,0 +1,16 @@
+[workspace.package]
+authors = ["Michal Nazarewicz <mina86@mina86.com>"]
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+members = [ "chsum-*" ]
+resolver = "2"
+
+[workspace.dependencies]
+derive_more = { version = "1.0.0", default-features = false }
+solana-client = { version = "1.18.26", default-features = false }
+solana-program = { version = "1.18.26", default-features = false }
+solana-sdk = { version = "1.18.26", default-features = false }
+solana-transaction-status = { version = "1.18.26", default-features = false }
+solana-write-account = { git = "https://github.com/mina86/solana-write-account" }

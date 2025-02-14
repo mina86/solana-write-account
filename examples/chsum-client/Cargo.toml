@@ -1,0 +1,16 @@
+[package]
+name = "chsum-client"
+authors.workspace = true
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+derive_more = { workspace = true, features = ["display", "from"] }
+solana-client.workspace = true
+solana-sdk.workspace = true
+solana-transaction-status.workspace = true
+solana-write-account = { workspace = true, features = ["client"], optional = true }
+
+[features]
+default = ["use-write-account"]
+use-write-account = ["solana-write-account"]
