@@ -1,16 +1,17 @@
 # Solana `write-account` examples
 
 Example code using the `solana-write-account` crate to implement
-*chunking* in a straightforward smart contract.  To test in localnet,
-in a background terminal execute `solana-test-validator` and then run:
+*chunking* in a smart contract.  To test in localnet, in a background
+terminal execute `solana-test-validator` and then run:
 
 ```shell
+$ cd ..
 $ cargo build-sbf
 $ solana -u localhost program deploy \
       ./target/deploy/solana_write_account.so
 # Make note of the program id
 
-$ git checkout demo
+$ cd examples
 $ cargo build-sbf
 $ solana -u localhost program deploy \
       ./target/deploy/chsum.so
