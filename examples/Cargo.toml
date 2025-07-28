@@ -8,9 +8,10 @@ members = [ "chsum-*" ]
 resolver = "2"
 
 [workspace.dependencies]
-derive_more = { version = "1.0.0", default-features = false }
-solana-client = { version = "1.18.26", default-features = false }
-solana-program = { version = "1.18.26", default-features = false }
-solana-sdk = { version = "1.18.26", default-features = false }
-solana-transaction-status = { version = "1.18.26", default-features = false }
-solana-write-account = { git = "https://github.com/mina86/solana-write-account" }
+derive_more = { version = "2.0.0", default-features = false }
+solana-client = { version = "2.3", default-features = false }
+solana-program = { version = "2.3", default-features = false }
+solana-sdk = { version = "2.3", default-features = false }
+solana-transaction-status = { version = "2.3", default-features = false }
+#solana-write-account = { git = "https://codeberg.org/mina86/solana-write-account" }
+solana-write-account = { path = ".." }

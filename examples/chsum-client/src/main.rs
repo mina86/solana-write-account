@@ -26,6 +26,7 @@ const WRITE_ACCOUNT_PROGRAM_ID: Pubkey = solana_sdk::pubkey!(
 
 /// Seed to use for the instruction data PDA.  Can be at most
 /// 31-byte long.
+#[cfg(feature = "use-write-account")]
 const SEED: &[u8] = b"";
 
 

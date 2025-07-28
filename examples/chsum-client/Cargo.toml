@@ -7,7 +7,7 @@ edition.workspace = true
 [dependencies]
 derive_more = { workspace = true, features = ["display", "from"] }
 solana-client.workspace = true
-solana-sdk.workspace = true
+solana-sdk = { workspace = true, features = ["full"] }
 solana-transaction-status.workspace = true
 solana-write-account = { workspace = true, features = ["client"], optional = true }
 

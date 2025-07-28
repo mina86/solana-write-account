@@ -15,4 +15,5 @@ client = []
 lib = []
 
 [dependencies]
-solana-program = "1.18.26"
+solana-program = "2.3"
+solana-system-interface = "1.0"

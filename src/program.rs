@@ -6,7 +6,6 @@ use solana_program::account_info::{next_account_info, AccountInfo};
 use solana_program::program_error::ProgramError;
 use solana_program::pubkey::Pubkey;
 use solana_program::rent::Rent;
-use solana_program::system_instruction;
 use solana_program::sysvar::Sysvar;
 
 type Result<T = (), E = ProgramError> = core::result::Result<T, E>;
@@ -105,7 +104,7 @@ fn handle_write(
 /// [`solana_program::entrypoint::MAX_PERMITTED_DATA_INCREASE`]).
 ///
 /// Otherwise, checks if account’s size it at least `size`.  If it isn’t,
-/// resizes the account (see [`AccountInfo::realloc`]).  Again, due to Solana’s
+/// resizes the account (see [`AccountInfo::resize`]).  Again, due to Solana’s
 /// limitations, account may grow by at most 10 KiB.  To remain rent exempt,
 /// this may lead to lamports being transferred from `payer` to the
 /// `write_account`.
@@ -121,7 +120,7 @@ fn setup_write_account(
 
     if lamports == 0 {
         // If the account has zero lamports it needs to be created first.
-        let instruction = system_instruction::create_account(
+        let instruction = solana_system_interface::instruction::create_account(
             accounts.payer.key,
             accounts.write.key,
             get_required_lamports()?,
@@ -134,12 +133,12 @@ fn setup_write_account(
             &[&accounts.write_seeds()],
         )
     } else if accounts.write.data_len() < size {
-        // If size is less than required, reallocate.  We may need to transfer
-        // more lamports to keep the account as rent-exempt.
+        // If size is less than required, resize.  We may need to transfer more
+        // lamports to keep the account as rent-exempt.
         let lamports = get_required_lamports()?.saturating_sub(lamports);
         if lamports > 0 {
             solana_program::program::invoke(
-                &system_instruction::transfer(
+                &solana_system_interface::instruction::transfer(
                     accounts.payer.key,
                     accounts.write.key,
                     lamports,
@@ -147,7 +146,7 @@ fn setup_write_account(
                 &[accounts.payer.clone(), accounts.write.clone()],
             )?;
         }
-        accounts.write.realloc(size, false)
+        accounts.write.resize(size)
     } else {
         // Otherwise, the account exists and is large enough.  There’s nothing
         // we need to do.
@@ -169,7 +168,7 @@ fn handle_free(accounts: Accounts) -> Result {
     }
 
     accounts.write.assign(&solana_program::system_program::ID);
-    accounts.write.realloc(0, false)
+    accounts.write.resize(0)
 }
 
 
