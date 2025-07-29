@@ -3,9 +3,12 @@
 
 [package]
 name = "solana-write-account"
+version = "0.2.0"
+description = "A Solana program and library for overcoming Solana transaction size limit."
 authors = ["Michal Nazarewicz <mina86@mina86.com>"]
-version = "0.0.0"
-edition = "2021"
+homepage = "https://codeberg.org/mina86/solana-write-account"
+license = "GPL-2.0-or-later"
+edition = "2024"
 
 [lib]
 crate-type = ["cdylib", "lib"]
