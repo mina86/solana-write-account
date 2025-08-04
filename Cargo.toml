@@ -1,25 +1,25 @@
 # Copyright 2024 by Composable Foundation
 # Copyright 2025 by Michał Nazarewicz <mina86@mina86.com>
 
-[package]
-name = "solana-write-account"
+[workspace.package]
 version = "0.2.1"
-description = "A Solana program and library for overcoming Solana transaction size limit."
 authors = ["Michal Nazarewicz <mina86@mina86.com>"]
 homepage = "https://codeberg.org/mina86/solana-write-account"
 license = "GPL-2.0-or-later"
 edition = "2021"
 
-[lib]
-crate-type = ["cdylib", "lib"]
+[workspace]
+members = [ "examples/chsum-*", "write-account" ]
+resolver = "2"
 
-[features]
-client = []
-lib = []
-
-[dependencies]
-solana-program = "2.3"
-solana-system-interface = "1.0"
-
-[dev-dependencies]
+[workspace.dependencies]
+derive_more = { version = "2.0.0", default-features = false }
 pretty_assertions = "1.4"
+solana-client = { version = "2.3", default-features = false }
+solana-program = { version = "2.3", default-features = false }
+solana-sdk = { version = "2.3", default-features = false }
+solana-system-interface = { version = "1.0", default-features = false }
+solana-transaction-status = { version = "2.3", default-features = false }
+
+#solana-write-account = { git = "https://codeberg.org/mina86/solana-write-account" }
+solana-write-account = { path = "write-account" }

@@ -5,14 +5,11 @@ Example code using the `solana-write-account` crate to implement
 terminal execute `solana-test-validator` and then run:
 
 ```shell
-$ cd ..
 $ cargo build-sbf
 $ solana -u localhost program deploy \
-      ./target/deploy/solana_write_account.so
+      ../target/deploy/solana_write_account.so
 # Make note of the program id
 
-$ cd examples
-$ cargo build-sbf
 $ solana -u localhost program deploy \
       ./target/deploy/chsum.so
 # Make note of the program id
@@ -24,10 +21,8 @@ noted above.  With that change done, you can test working of the
 `chsum` program by executing the `chsum-client`:
 
 ```shell
-$ cargo build -r -p chsum-client
-
 $ data=abcdefghijklmnopqrstuvwxyz
-$ ./target/release/chsum-client 2 "$data"
+$ cargo run -r -p chsum-client -- 2 "$data"
 ⋮
 Program log: 4264
 ⋮
@@ -35,7 +30,7 @@ Program log: 4264
 $ data=$data$data$data$data
 $ data=$data$data$data$data
 $ data=$data$data$data$data
-$ ./target/release/chsum-client 2 "$data"
+$ cargo run -r -p chsum-client -- 2 "$data"
 Writing chunks into the data account…
 ⋮
 Program log: 272896

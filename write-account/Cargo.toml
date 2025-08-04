@@ -1,0 +1,25 @@
+# Copyright 2024 by Composable Foundation
+# Copyright 2025 by Michał Nazarewicz <mina86@mina86.com>
+
+[package]
+name = "solana-write-account"
+description = "A Solana program and library for overcoming Solana transaction size limit."
+authors.workspace = true
+version.workspace = true
+homepage.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[features]
+client = []
+lib = []
+
+[dependencies]
+solana-program.workspace = true
+solana-system-interface.workspace = true
+
+[dev-dependencies]
+pretty_assertions.workspace = true
