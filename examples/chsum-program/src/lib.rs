@@ -7,10 +7,10 @@ use solana_program::program_error::ProgramError;
 use solana_program::pubkey::Pubkey;
 
 #[cfg(not(feature = "use-write-account"))]
-solana_program::entrypoint!(process_instruction);
+solana_program::entrypoint_no_alloc!(process_instruction);
 
 #[cfg(feature = "use-write-account")]
-solana_write_account::entrypoint!(process_instruction);
+solana_write_account::entrypoint_no_alloc!(process_instruction);
 
 fn process_instruction<'a>(
     _program_id: &'a Pubkey,

@@ -2,6 +2,8 @@
 // warnings when `cfg` checks for an undefined feature.
 #![allow(unexpected_cfgs)]
 
+use core::mem::MaybeUninit;
+
 use solana_program::account_info::{next_account_info, AccountInfo};
 use solana_program::program_error::ProgramError;
 use solana_program::pubkey::Pubkey;
@@ -10,7 +12,36 @@ use solana_program::sysvar::Sysvar;
 
 type Result<T = (), E = ProgramError> = core::result::Result<T, E>;
 
-solana_program::entrypoint!(process_instruction);
+/// Solana program entry point.
+///
+/// We’re implementing it ourselves to reduce amount of stack space
+/// solana-program’s `entrypoint_no_alloc` wastes (we don’t need anywhere close
+/// to 64 accounts).
+///
+/// # Safety
+///
+/// Must be called with pointer to properly serialised instruction such
+/// as done by the Solana runtime.
+#[no_mangle]
+pub unsafe extern "C" fn entrypoint(input: *mut u8) -> u64 {
+    let mut accounts = [const { MaybeUninit::<AccountInfo>::uninit() }; 3];
+    // SAFETY: Caller promises this is safe.
+    let (program_id, num_accounts, instruction_data) = unsafe {
+        solana_program::entrypoint::deserialize_into(input, &mut accounts)
+    };
+    let accounts = &accounts[..num_accounts]
+        as *const [MaybeUninit<AccountInfo>]
+        as *const [AccountInfo];
+    // SAFETY: deserialize_into initialised the first num_accounts elements.
+    let accounts = unsafe { &*(accounts) };
+    match process_instruction(program_id, accounts, instruction_data) {
+        Ok(()) => solana_program::entrypoint::SUCCESS,
+        Err(error) => error.into(),
+    }
+}
+
+solana_program::entrypoint::custom_heap_default!();
+solana_program::entrypoint::custom_panic_default!();
 
 /// Processes the Solana instruction.
 ///

@@ -159,8 +159,8 @@ impl<'a> WriteIter<'a> {
     pub fn chunk_size(&mut self, chunk_size: usize) {
         let max = MAX_CHUNK_SIZE.get() - self.seed.len() as u16;
         let chunk_size = chunk_size.min(usize::from(max)) as u16;
-        self.chunk_size = NonZeroU16::new(chunk_size)
-            .unwrap_or(NonZeroU16::MIN);
+        self.chunk_size =
+            NonZeroU16::new(chunk_size).unwrap_or(NonZeroU16::MIN);
     }
 
     /// Consumes the iterator and returns Write account address and bump.
