@@ -20,3 +20,6 @@ lib = []
 [dependencies]
 solana-program = "2.3"
 solana-system-interface = "1.0"
+
+[dev-dependencies]
+pretty_assertions = "1.4"
