@@ -35,6 +35,9 @@
 //! The account data must be a length-prefixed slice of bytes.  In other words,
 //! borsh-serialised `Vec<u8>`.  The account may contain trailing bytes which
 //! are ignored.
+//!
+//! ## Feature flags
+#![doc = document_features::document_features!()]
 
 #[cfg(feature = "client")]
 pub mod instruction;

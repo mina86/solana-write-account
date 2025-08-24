@@ -14,10 +14,17 @@ edition.workspace = true
 crate-type = ["cdylib", "lib"]
 
 [features]
+## Enables features for off-chain clients which invoke smart contracts which
+## read the instruction data from the account.
 client = []
+
+## Enables features for on-chain smart contracts which parse the serialised
+## program arguments and allow the smart contract to read instruction data from
+## an account.
 lib = []
 
 [dependencies]
+document-features.workspace = true
 solana-program.workspace = true
 solana-system-interface.workspace = true
 
