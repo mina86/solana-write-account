@@ -28,18 +28,13 @@
 //! account.  This library provides a helper Solana program which allows
 //! populating the account with overlong instruction data, client helper
 //! functions for invoking program with instruction stored in an account (when
-//! built with `client` feature) and helper [`entrypoint`] module for Solana
+//! built with `client` feature) and helper [`mod@entrypoint`] module for Solana
 //! programs which want to support reading instruction data from an account
 //! (when built with `lib` feature).
 //!
 //! The account data must be a length-prefixed slice of bytes.  In other words,
 //! borsh-serialised `Vec<u8>`.  The account may contain trailing bytes which
 //! are ignored.
-//!
-//! This module provides types to help use this feature of the Solana IBC
-//! contract.  [`Accounts`] is used to add the account with instruction data to
-//! an instruction and [`Instruction`] constructs an empty instruction data to
-//! call the contract with.
 
 #[cfg(feature = "client")]
 pub mod instruction;

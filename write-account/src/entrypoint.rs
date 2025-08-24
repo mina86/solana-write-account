@@ -1,3 +1,6 @@
+//! Functions for the smart contract to allow parsing the serialised program
+//! arguments and read instruction data from an account.
+
 use solana_program::account_info::AccountInfo;
 use solana_program::program_error::ProgramError;
 use solana_program::pubkey::Pubkey;
@@ -89,7 +92,7 @@ fn get_ix_data<'a>(account: AccountInfo<'a>) -> Result<&'a [u8], ProgramError> {
 
 /// Declare the program entrypoint and set up global handlers.
 ///
-/// Analogous to [`solana_program::entrypoint`] macro with additional handling
+/// Analogous to [`solana_program::entrypoint!`] macro with additional handling
 /// of empty instruction data as described in [`deserialize`].
 #[macro_export]
 macro_rules! entrypoint {

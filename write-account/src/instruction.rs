@@ -1,3 +1,6 @@
+//! Functions and interface for client application to call smart contracts
+//! reading the instruction data from an account.
+
 use core::num::NonZeroU16;
 
 use solana_program::instruction::{AccountMeta, Instruction};
@@ -52,7 +55,7 @@ impl<'a> WriteIter<'a> {
     /// A length-prefixed `data` is write into the account.  The length-prefix
     /// uses 4-byte little-endian encoding for the length.  This is the same
     /// format Borsh uses for array serialisation.  The length-prefixed data is
-    /// what [`crate::entrypoint`] macro expects.
+    /// what [`crate::entrypoint!`] macro expects.
     ///
     /// Returns an `ArithmeticOverflow` error if the resulting data exceeds
     /// maximum Solana account size (which is 10 MiB).  If the write account
